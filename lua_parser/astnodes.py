@@ -5,11 +5,11 @@
     Contains all Ast Node definitions.
 """
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 from antlr4.Token import CommonToken
 
-Comments = Optional[List["Comment"]]
+Comments = Optional[list["Comment"]]
 
 
 def _equal_dicts(d1, d2, ignore_keys):
@@ -148,9 +148,9 @@ class Expression(Node):
 class Block(Node):
     """Define a Lua Block."""
 
-    def __init__(self, body: List[Statement], **kwargs):
+    def __init__(self, body: list[Statement], **kwargs):
         super().__init__("Block", **kwargs)
-        self.body: List[Statement] = body
+        self.body: list[Statement] = body
 
 
 class Chunk(Node):
@@ -221,26 +221,26 @@ class Assign(Statement):
     """Lua global assignment statement.
 
     Attributes:
-        targets (`list<Node>`): List of targets.
-        values (`list<Node>`): List of values.
+        targets (`list<Node>`): list of targets.
+        values (`list<Node>`): list of values.
 
     """
 
-    def __init__(self, targets: List[Node], values: List[Node], **kwargs):
+    def __init__(self, targets: list[Node], values: list[Node], **kwargs):
         super().__init__("Assign", **kwargs)
-        self.targets: List[Node] = targets
-        self.values: List[Node] = values
+        self.targets: list[Node] = targets
+        self.values: list[Node] = values
 
 
 class LocalAssign(Assign):
     """Lua local assignment statement.
 
     Attributes:
-        targets (`list<Node>`): List of targets.
-        values (`list<Node>`): List of values.
+        targets (`list<Node>`): list of targets.
+        values (`list<Node>`): list of values.
     """
 
-    def __init__(self, targets: List[Node], values: List[Node], **kwargs):
+    def __init__(self, targets: list[Node], values: list[Node], **kwargs):
         super().__init__(targets, values, **kwargs)
         self._name: str = "LocalAssign"
 
@@ -250,7 +250,7 @@ class While(Statement):
 
     Attributes:
         test (`Node`): Expression to test.
-        body (`Block`): List of statements to execute.
+        body (`Block`): list of statements to execute.
     """
 
     def __init__(self, test: Expression, body: Block, **kwargs):
@@ -263,7 +263,7 @@ class Do(Statement):
     """Lua do end statement.
 
     Attributes:
-        body (`Block`): List of statements to execute.
+        body (`Block`): list of statements to execute.
     """
 
     def __init__(self, body: Block, **kwargs):
@@ -276,7 +276,7 @@ class Repeat(Statement):
 
     Attributes:
         test (`Node`): Expression to test.
-        body (`Block`): List of statements to execute.
+        body (`Block`): list of statements to execute.
     """
 
     def __init__(self, body: Block, test: Expression, **kwargs):
@@ -290,8 +290,8 @@ class ElseIf(Statement):
 
     Attributes:
         test (`Node`): Expression to test.
-        body (`list<Statement>`): List of statements to execute if test is true.
-        orelse (`list<Statement> or ElseIf`): List of statements or ElseIf if test if false.
+        body (`list<Statement>`): list of statements to execute if test is true.
+        orelse (`list<Statement> or ElseIf`): list of statements or ElseIf if test if false.
     """
 
     def __init__(self, test: Node, body: Block, orelse, **kwargs):
@@ -306,12 +306,12 @@ class If(Statement):
 
     Attributes:
         test (`Node`): Expression to test.
-        body (`Block`): List of statements to execute if test is true.
-        orelse (`list<Statement> or ElseIf`): List of statements or ElseIf if test if false.
+        body (`Block`): list of statements to execute if test is true.
+        orelse (`list<Statement> or ElseIf`): list of statements or ElseIf if test if false.
     """
 
     def __init__(
-        self, test: Expression, body: Block, orelse: List[Statement] or ElseIf, **kwargs
+        self, test: Expression, body: Block, orelse: list[Statement] or ElseIf, **kwargs
     ):
         super().__init__("If", **kwargs)
         self.test: Expression = test
@@ -377,7 +377,7 @@ class Fornum(Statement):
         start (`Expression`): Start index value.
         stop (`Expression`): Stop index value.
         step (`Expression`): Step value.
-        body (`Block`): List of statements to execute.
+        body (`Block`): list of statements to execute.
     """
 
     def __init__(
@@ -401,18 +401,18 @@ class Forin(Statement):
     """Define the for in lua statement.
 
     Attributes:
-        body (`Block`): List of statements to execute.
+        body (`Block`): list of statements to execute.
         iter (`list<Expression>`): Iterable expressions.
         targets (`list<Name>`): Start index value.
     """
 
     def __init__(
-        self, body: Block, iter: List[Expression], targets: List[Name], **kwargs
+        self, body: Block, iter: list[Expression], targets: list[Name], **kwargs
     ):
         super(Forin, self).__init__("Forin", **kwargs)
         self.body: Block = body
-        self.iter: List[Expression] = iter
-        self.targets: List[Name] = targets
+        self.iter: list[Expression] = iter
+        self.targets: list[Name] = targets
 
 
 class Call(Statement):
@@ -423,10 +423,10 @@ class Call(Statement):
         args (`list<Expression>`): Function call arguments.
     """
 
-    def __init__(self, func: Expression, args: List[Expression], **kwargs):
+    def __init__(self, func: Expression, args: list[Expression], **kwargs):
         super(Call, self).__init__("Call", **kwargs)
         self.func: Expression = func
-        self.args: List[Expression] = args
+        self.args: list[Expression] = args
 
 
 class Invoke(Statement):
@@ -439,12 +439,12 @@ class Invoke(Statement):
     """
 
     def __init__(
-        self, source: Expression, func: Expression, args: List[Expression], **kwargs
+        self, source: Expression, func: Expression, args: list[Expression], **kwargs
     ):
         super(Invoke, self).__init__("Invoke", **kwargs)
         self.source: Expression = source
         self.func: Expression = func
-        self.args: List[Expression] = args
+        self.args: list[Expression] = args
 
 
 class Function(Statement):
@@ -453,13 +453,13 @@ class Function(Statement):
     Attributes:
         name (`Expression`): Function name.
         args (`list<Expression>`): Function arguments.
-        body (`Block`): List of statements to execute.
+        body (`Block`): list of statements to execute.
     """
 
-    def __init__(self, name: Expression, args: List[Expression], body: Block, **kwargs):
+    def __init__(self, name: Expression, args: list[Expression], body: Block, **kwargs):
         super(Function, self).__init__("Function", **kwargs)
         self.name: Expression = name
-        self.args: List[Expression] = args
+        self.args: list[Expression] = args
         self.body: Block = body
 
 
@@ -469,13 +469,13 @@ class LocalFunction(Statement):
     Attributes:
         name (`Expression`): Function name.
         args (`list<Expression>`): Function arguments.
-        body (`list<Statement>`): List of statements to execute.
+        body (`list<Statement>`): list of statements to execute.
     """
 
-    def __init__(self, name: Expression, args: List[Expression], body: Block, **kwargs):
+    def __init__(self, name: Expression, args: list[Expression], body: Block, **kwargs):
         super(LocalFunction, self).__init__("LocalFunction", **kwargs)
         self.name: Expression = name
-        self.args: List[Expression] = args
+        self.args: list[Expression] = args
         self.body: Block = body
 
 
@@ -486,21 +486,21 @@ class Method(Statement):
         source (`Expression`): Source expression where method is defined.
         name (`Expression`): Function name.
         args (`list<Expression>`): Function arguments.
-        body (`Block`): List of statements to execute.
+        body (`Block`): list of statements to execute.
     """
 
     def __init__(
         self,
         source: Expression,
         name: Expression,
-        args: List[Expression],
+        args: list[Expression],
         body: Block,
         **kwargs
     ):
         super(Method, self).__init__("Method", **kwargs)
         self.source: Expression = source
         self.name: Expression = name
-        self.args: List[Expression] = args
+        self.args: list[Expression] = args
         self.body: Block = body
 
 
@@ -609,9 +609,9 @@ class Table(Expression):
         fields (`list<Field>`): Table fields.
     """
 
-    def __init__(self, fields: List[Field], **kwargs):
+    def __init__(self, fields: list[Field], **kwargs):
         super().__init__("Table", **kwargs)
-        self.fields: List[Field] = fields
+        self.fields: list[Field] = fields
 
 
 class Dots(Expression):
@@ -626,12 +626,12 @@ class AnonymousFunction(Expression):
 
     Attributes:
         args (`list<Expression>`): Function arguments.
-        body (`Block`): List of statements to execute.
+        body (`Block`): list of statements to execute.
     """
 
-    def __init__(self, args: List[Expression], body: Block, **kwargs):
+    def __init__(self, args: list[Expression], body: Block, **kwargs):
         super(AnonymousFunction, self).__init__("AnonymousFunction", **kwargs)
-        self.args: List[Expression] = args
+        self.args: list[Expression] = args
         self.body: Block = body
 
 

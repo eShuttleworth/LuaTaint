@@ -5,7 +5,7 @@ from antlr4 import InputStream, CommonTokenStream
 
 from lua_parser.astnodes import *
 from lua_parser.parser.LuaLexer import LuaLexer
-from typing import List, Tuple
+from typing import Optional
 from antlr4.Token import Token
 
 
@@ -205,8 +205,8 @@ class Builder:
         self._last_expr_type: Optional[int] = None
 
         # following stack are used to backup values
-        self._index_stack: List[int] = []
-        self._right_index_stack: List[int] = []
+        self._index_stack: list[int] = []
+        self._right_index_stack: list[int] = []
         self.text: str = ""  # last token text
         self.type: int = -1  # last token type
 
@@ -214,10 +214,10 @@ class Builder:
         self._expected = []
 
         # comments waiting to be inserted into ast nodes
-        self._comments_index_stack: List[int] = []
-        self.comments: List[Comment] = []
+        self._comments_index_stack: list[int] = []
+        self.comments: list[Comment] = []
         self._hidden_handled: bool = False
-        self._hidden_handled_stack: List[bool] = []
+        self._hidden_handled_stack: list[bool] = []
 
     @property
     def _LT(self) -> CommonToken:
@@ -309,7 +309,7 @@ class Builder:
     def prev_is(self, type_to_seek) -> bool:
         return self._stream.LT(-1).type == type_to_seek
 
-    def next_in_rc(self, types: List[int], hidden_right: bool = True) -> bool:
+    def next_in_rc(self, types: list[int], hidden_right: bool = True) -> bool:
         token = self._stream.LT(1)
         tok_type: int = token.type
         self._right_index = self._stream.index
@@ -324,7 +324,7 @@ class Builder:
         self._expected.extend(types)
         return False
 
-    def next_in(self, types: List[int]) -> bool:
+    def next_in(self, types: list[int]) -> bool:
         if self._stream.LT(1).type in types:
             return True
         else:
@@ -398,7 +398,7 @@ class Builder:
             return []
 
         idx = 0
-        comments: List[Comment] = []
+        comments: list[Comment] = []
 
         # search first comment
         while idx < len(self.comments) and self.comments[idx] is None:
@@ -547,7 +547,7 @@ class Builder:
 
         return self.failure()
 
-    def parse_var_list(self) -> List[Expression] or bool:
+    def parse_var_list(self) -> list[Expression] | bool:
         lua_vars = []
         self.save()
         var = self.parse_var()
@@ -709,8 +709,8 @@ class Builder:
 
         return self.failure()
 
-    def parse_expr_list(self) -> List[Expression] or bool:
-        expr_list: List[Expression] = []
+    def parse_expr_list(self) -> list[Expression] | bool:
+        expr_list: list[Expression] = []
         self.save()
         expr = self.parse_expr()
         if expr:
@@ -1034,8 +1034,8 @@ class Builder:
                     self.abort()
         return self.failure()
 
-    def parse_param_list(self) -> List[Expression] or bool:
-        param_list: List[Expression] = self.parse_name_list()
+    def parse_param_list(self) -> list[Expression] | bool:
+        param_list: list[Expression] = self.parse_name_list()
         if param_list:
             self.save()
             if self.next_is_rc(Tokens.COMMA) and self.next_is_rc(Tokens.VARARGS):
@@ -1054,9 +1054,9 @@ class Builder:
         self.success()
         return []
 
-    def parse_name_list(self) -> List[Name] or bool:
+    def parse_name_list(self) -> list[Name] | bool:
         self.save()
-        names: List[Name] = []
+        names: list[Name] = []
         if self.next_is_rc(Tokens.NAME):
             names.append(
                 Name(
@@ -1478,7 +1478,7 @@ class Builder:
 
         return self.failure()
 
-    def parse_field_list(self) -> List[Field] or bool:
+    def parse_field_list(self) -> list[Field] | bool:
         field_list = []
         self.save()
         field, _ = self.parse_field()
@@ -1509,7 +1509,7 @@ class Builder:
             return field_list
         return self.failure()
 
-    def parse_field(self) -> Tuple[Field or bool, Comments]:
+    def parse_field(self) -> tuple[Field | bool, Comments]:
         self.save()
 
         if self.next_is_rc(Tokens.OBRACK):
