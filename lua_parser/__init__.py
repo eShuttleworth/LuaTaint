@@ -1,5 +1,6 @@
 """Lua parser package initialization."""
 
+import sys
 import types
 import typing
 
@@ -13,6 +14,8 @@ import typing
 # the parser functional we ensure ``typing.io`` is defined before importing
 # any antlr modules.
 if not hasattr(typing, "io"):
-    typing.io = types.SimpleNamespace(TextIO=typing.TextIO)
+    _typing_io = types.SimpleNamespace(TextIO=typing.TextIO)
+    typing.io = _typing_io
+    sys.modules["typing.io"] = _typing_io
 
 __version__ = "3.1.1"
