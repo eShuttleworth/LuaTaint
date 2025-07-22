@@ -28,6 +28,16 @@ def remove_escape_chars(lua_code):
     cleaned_code = re.sub(pattern, '', lua_code)
     return cleaned_code
 
+
+def is_compiled_lua(path):
+    """Return True if the file is compiled Lua bytecode."""
+    try:
+        with open(path, 'rb') as fh:
+            return fh.read(4) == b'\x1bLua'
+    except OSError as exc:
+        log.error('Could not read %s: %s', path, exc)
+        return True
+
 @lru_cache()
 def generate_ast(path):
     """Generate an Abstract Syntax Tree using the ast module.
@@ -35,18 +45,26 @@ def generate_ast(path):
         Args:
             path(str): The path to the file e.g. example/foo/bar.py
     """
-    if os.path.isfile(path):
-        with open(path, 'r',encoding='utf-8', errors = 'ignore') as f:
+    if not os.path.isfile(path):
+        raise IOError('Input needs to be a file. Path: ' + path)
+
+    if is_compiled_lua(path):
+        raise SyntaxError('Compiled Lua bytecode cannot be parsed: ' + path)
+
+    try:
+        with open(path, 'r', encoding='utf-8', errors='ignore') as f:
             txt = f.read()
-            cleaned_code = remove_escape_chars(txt)
-            try:
-                tree = ast.parse(cleaned_code)
-                return tree
-                #return PytTransformer().visit(tree)
-            except SyntaxError:  # pragma: no cover
-                global recursive
-                raise SyntaxError('The ast module can not parse the file')
-    raise IOError('Input needs to be a file. Path: ' + path)
+    except OSError as exc:
+        raise IOError(f'Failed to open {path}: {exc}') from exc
+
+    cleaned_code = remove_escape_chars(txt)
+    try:
+        tree = ast.parse(cleaned_code)
+        return tree
+        #return PytTransformer().visit(tree)
+    except SyntaxError as exc:  # pragma: no cover
+        global recursive
+        raise SyntaxError('The ast module can not parse the file') from exc
 
 def _get_call_names_helper(node):
     """Recursively finds all function names."""

@@ -9,7 +9,7 @@ from collections import defaultdict
 from analysis.constraint_table import initialize_constraint_table
 from analysis.fixed_point import analyse
 from cfg import make_cfg
-from core.ast_helper import generate_ast
+from core.ast_helper import generate_ast, is_compiled_lua
 from core.project_handler import (
     get_directory_modules,
     get_modules
@@ -33,28 +33,40 @@ log = logging.getLogger(__name__)
 
 def discover_files(targets, excluded_files, recursive=False):
     included_files = list()
-    excluded_list = excluded_files.split(",")
+    excluded_list = [f for f in excluded_files.split(",") if f]
     for target in targets:
         if os.path.isdir(target):
             for root, _, files in os.walk(target):
                 for file in files:
-                    if file.endswith('.lua') and file not in excluded_list:
-                        fullpath = os.path.join(root, file)
-                        included_files.append(fullpath)
-                        log.debug('Discovered file: %s', fullpath)
+                    fullpath = os.path.join(root, file)
+                    if file.endswith('.lua') and fullpath not in excluded_list:
+                        if not is_compiled_lua(fullpath):
+                            included_files.append(fullpath)
+                            log.debug('Discovered file: %s', fullpath)
+                        else:
+                            log.warning('Skipping compiled Lua file: %s', fullpath)
                 if not recursive:
                     break
         else:
-            if target not in excluded_list:
-                included_files.append(target)
-                log.debug('Discovered file: %s', target)
+            if target.endswith('.lua') and target not in excluded_list:
+                if not is_compiled_lua(target):
+                    included_files.append(target)
+                    log.debug('Discovered file: %s', target)
+                else:
+                    log.warning('Skipping compiled Lua file: %s', target)
+            else:
+                log.warning('Skipping non-Lua file: %s', target)
     return included_files
 
 def retrieve_nosec_lines(
     path
 ):
-    file = open(path, 'r',encoding='utf-8', errors = 'ignore')
-    lines = file.readlines()
+    try:
+        with open(path, 'r', encoding='utf-8', errors='ignore') as file:
+            lines = file.readlines()
+    except OSError as exc:
+        log.error('Failed to read %s: %s', path, exc)
+        return set()
     return set(
         lineno for
         (lineno, line) in enumerate(lines, start=1)
