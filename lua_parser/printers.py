@@ -11,6 +11,7 @@ from enum import Enum
 import xml.etree.cElementTree as ElementTree
 from xml.dom import minidom
 from textwrap import indent
+from typing import List
 
 
 class Style(Enum):
