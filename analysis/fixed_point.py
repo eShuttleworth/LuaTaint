@@ -1,8 +1,14 @@
 """This module implements the fixed point algorithm."""
 from collections import deque
+import logging
+import os
+import psutil
 
 from .constraint_table import constraint_table
 from .reaching_definitions_taint import ReachingDefinitionsTaintAnalysis
+
+
+log = logging.getLogger(__name__)
 
 
 class FixedPointAnalysis:
@@ -23,16 +29,35 @@ class FixedPointAnalysis:
         previously led to excessive memory usage on large graphs.
         """
         worklist = deque(self.cfg.nodes)
+        in_worklist = set(worklist)
+        iteration = 0
+        process = psutil.Process(os.getpid())
 
         while worklist:
             node = worklist.popleft()
+            in_worklist.discard(node)
+
+            if iteration % 100 == 0:
+                mem_mb = process.memory_info().rss / (1024 * 1024)
+                log.debug(
+                    "Iter %d: processing %s; worklist size %d; memory %.1f MB",
+                    iteration,
+                    getattr(node, "label", str(node)),
+                    len(worklist),
+                    mem_mb,
+                )
+
             old_constraint = constraint_table[node]
             self.analysis.fixpointmethod(node)
             new_constraint = constraint_table[node]
 
             if new_constraint != old_constraint:
                 for dep_node in self.analysis.dep(node):
-                    worklist.append(dep_node)
+                    if dep_node not in in_worklist:
+                        worklist.append(dep_node)
+                        in_worklist.add(dep_node)
+
+            iteration += 1
 
 
 def analyse(cfg_list):
