@@ -436,10 +436,10 @@ class StmtVisitor(ast.NodeVisitor):
             else:
                 label = LabelVisitor()
                 label.visit(node)
-                log.warn(
-                    'Assignment not properly handled in %s. Could result in not finding a vulnerability.'
-                    'Assignment: %s',
+                log.warning(
+                    'Assignment not properly handled at %s:%s. Could result in not finding a vulnerability. Assignment: %s',
                     getattr(self, 'filenames', ['?'])[0],
+                    getattr(node, 'line', '?'),
                     label.result,
                 )
                 return self.append_node(AssignmentNode(
@@ -482,11 +482,11 @@ class StmtVisitor(ast.NodeVisitor):
             else:
                 label = LabelVisitor()
                 label.visit(node)
-                log.warn(
-                    'Assignment not properly handled in %s. Could result in not finding a vulnerability.'
-                    'Assignment: %s',
+                log.warning(
+                    'Assignment not properly handled at %s:%s. Could result in not finding a vulnerability. Assignment: %s',
                     getattr(self, 'filenames', ['?'])[0],
-                    label.result, # self.label.result
+                    getattr(node, 'line', '?'),
+                    label.result,  # self.label.result
                 )
                 return self.append_node(AssignmentNode(
                     label.result,

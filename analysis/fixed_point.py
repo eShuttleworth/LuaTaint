@@ -33,6 +33,8 @@ class FixedPointAnalysis:
         iteration = 0
         process = psutil.Process(os.getpid())
 
+        log.debug("Starting fixpoint on %s with %d nodes", getattr(self.cfg, 'filename', '?'), len(worklist))
+
         while worklist:
             node = worklist.popleft()
             in_worklist.discard(node)
@@ -65,3 +67,5 @@ def analyse(cfg_list):
     for cfg in cfg_list:
         analysis = FixedPointAnalysis(cfg)
         analysis.fixpoint_runner()
+        mem_mb = psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024)
+        log.debug("Completed fixpoint on %s; memory usage %.1f MB", getattr(cfg, 'filename', '?'), mem_mb)

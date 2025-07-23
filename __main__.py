@@ -31,6 +31,13 @@ from web_frameworks import (
 
 log = logging.getLogger(__name__)
 
+
+def log_memory(stage):
+    """Helper to log current memory usage."""
+    process = psutil.Process(os.getpid())
+    mem_mb = process.memory_info().rss / (1024 * 1024)
+    log.debug("Memory usage %s: %.1f MB", stage, mem_mb)
+
 def discover_files(targets, excluded_files, recursive=False):
     included_files = list()
     excluded_list = [f for f in excluded_files.split(",") if f]
@@ -88,6 +95,7 @@ def main(command_line_args=sys.argv[1:]):  # noqa: C901
         args.excluded_paths,
         True
     )
+    log_memory("after discovering files")
 
     nosec_lines = defaultdict(set)
 
@@ -108,6 +116,7 @@ def main(command_line_args=sys.argv[1:]):  # noqa: C901
 
         local_modules = get_directory_modules(directory)
         tree = generate_ast(path)
+        log_memory(f"after AST for {os.path.basename(path)}")
 
         cfg = make_cfg(
             tree,
@@ -116,6 +125,7 @@ def main(command_line_args=sys.argv[1:]):  # noqa: C901
             path,
             allow_local_directory_imports=args.allow_local_imports
         )
+        log_memory(f"after CFG for {os.path.basename(path)}")
         cfg_list = [cfg]
         
         framework_entry_criteria = is_luci_route_function
@@ -129,8 +139,10 @@ def main(command_line_args=sys.argv[1:]):  # noqa: C901
         )
     
     initialize_constraint_table(cfg_list)
+    log_memory("after initialize_constraint_table")
     log.info("Analysing")
     analyse(cfg_list)
+    log_memory("after analysis")
     log.info("Finding vulnerabilities")
     
     #vulnerabilities = list()
@@ -141,16 +153,20 @@ def main(command_line_args=sys.argv[1:]):  # noqa: C901
         args.interactive,
         nosec_lines
     )
+    log_memory("after find_vulnerabilities")
 
     filter_non_external_inputs(vulnerabilities)
+    log_memory("after filter_non_external_inputs")
 
     if args.baseline:
         vulnerabilities = get_vulnerabilities_not_in_baseline(
             vulnerabilities,
             args.baseline
         )
+        log_memory("after baseline comparison")
         
     args.formatter.report(vulnerabilities, args.output_file, args.only_unsanitised)
+    log_memory("after report generation")
     
     '''has_unsanitised_vulnerabilities = any(
         not isinstance(v, SanitisedVulnerability)
