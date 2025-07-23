@@ -23,16 +23,20 @@ class FixedPointAnalysis:
         previously led to excessive memory usage on large graphs.
         """
         worklist = deque(self.cfg.nodes)
+        in_worklist = set(worklist)
 
         while worklist:
             node = worklist.popleft()
+            in_worklist.discard(node)
             old_constraint = constraint_table[node]
             self.analysis.fixpointmethod(node)
             new_constraint = constraint_table[node]
 
             if new_constraint != old_constraint:
                 for dep_node in self.analysis.dep(node):
-                    worklist.append(dep_node)
+                    if dep_node not in in_worklist:
+                        worklist.append(dep_node)
+                        in_worklist.add(dep_node)
 
 
 def analyse(cfg_list):
